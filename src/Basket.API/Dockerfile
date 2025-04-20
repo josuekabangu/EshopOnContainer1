@@ -22,9 +22,9 @@ RUN apt-get update && apt-get install -y curl
 COPY --from=build /out .
 
 # Copie les scripts depuis le dossier temporaire
-COPY --from=build /tmp/scripts/wait-for-it.sh /wait-for-it.sh
-COPY --from=build /tmp/scripts/init-db.sh /init-db.sh
+COPY --from=build /tmp/scripts/wait-for-it.sh /app/wait-for-it.sh
+COPY --from=build /tmp/scripts/init-db.sh /app/init-db.sh
 
-RUN chmod +x /wait-for-it.sh /init-db.sh
+RUN chmod +x /app/wait-for-it.sh /app/init-db.sh
 
 ENTRYPOINT ["dotnet", "Basket.API.dll"]
