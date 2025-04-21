@@ -27,4 +27,6 @@ COPY --from=build /tmp/scripts/init-db.sh /app/init-db.sh
 
 RUN chmod +x /app/wait-for-it.sh /app/init-db.sh
 
+EXPOSE 5221
+
 ENTRYPOINT ["dotnet", "Basket.API.dll"]
