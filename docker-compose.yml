@@ -239,6 +239,33 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  webhooks-api:
+    image: webhooks-api
+    build: 
+      context: .
+      dockerfile: src/Webhooks.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "http://*:5101"
+      ConnectionStrings__WebhooksDB: "Server=catalogdb;Port=5432;Database=webhooksdb;User Id=postgres;Password=password;"
+      ConnectionStrings__EventBus: "amqp://guest:guest@rabbitmq:5672"
+    ports:
+      - "5101:5101"
+    depends_on:
+      catalogdb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c", "./wait-for-it.sh", "rabbitmq:5672 catalogdb:5432", "--", "dotnet", "Webhooks.API.dll"]
+    networks:
+      - eShopNetwork
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5101/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     
 
 networks:
