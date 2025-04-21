@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   catalogdb:
     image: ankane/pgvector:latest
@@ -76,10 +78,10 @@ services:
       dockerfile: src/Basket.API/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "http://*:5221"
       ConnectionStrings__Redis: redis
       ConnectionStrings__EventBus: amqp://guest:guest@rabbitmq:5672
       Identity__Url: "http://identity-api:5001"
-      ASPNETCORE_URLS: "http://*:5221"
       DOTNET_READYTORUN: 1
       DOTNET_TieredPGO: 1
     ports:
@@ -125,7 +127,7 @@ services:
       - eShopNetwork
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
       timeout: 5s
       retries: 5
@@ -141,7 +143,7 @@ services:
       ConnectionStrings__IdentityDB: "Server=catalogdb;Port=5432;Database=identitydb;User Id=postgres;Password=password;"
       ConnectionStrings__EventBus: "amqp://guest:guest@rabbitmq:5672"
     ports:
-      - "5002:5001"  # Port corrigé pour éviter conflit
+      - "5002:5001"
     depends_on:
       catalogdb:
         condition: service_healthy
@@ -158,17 +160,18 @@ services:
       retries: 5
 
   ordering-api:
+    image: ordering-api
     build:
       context: .
       dockerfile: src/Ordering.API/Dockerfile
-    image: ordering-api
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__orderingdb=Host=catalogdb;Port=5432;Database=orderingdb;Username=postgres;Password=password  # Changé de DefaultConnection à orderingdb
-      - ConnectionStrings__EventBus=amqp://guest:guest@rabbitmq:5672
-      - RabbitMQ__Host=rabbitmq
-      - RabbitMQ__Port=5672
-      - Identity__Url=http://identity-api:5001
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "http://*:8080"
+      ConnectionStrings__orderingdb: Host=catalogdb;Port=5432;Database=orderingdb;Username=postgres;Password=password
+      ConnectionStrings__EventBus: amqp://guest:guest@rabbitmq:5672
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Port: 5672
+      Identity__Url: http://identity-api:5001
     ports:
       - "5100:8080"
     depends_on:
@@ -183,8 +186,38 @@ services:
     entrypoint: ["/bin/sh", "-c", "./wait-for-it.sh rabbitmq:5672 -- ./wait-for-it.sh orderingdb:5432 -- ./wait-for-it.sh identity-api:5001 -- dotnet Ordering.API.dll"]
     networks:
       - eShopNetwork
-    restart: unless-stopped   
+    restart: unless-stopped 
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  order-processor:
+    image: order-processor
+    build: 
+      context: .
+      dockerfile: src/OrderProcessor/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "http://*:5200"
+      ConnectionStrings__EventBus: "amqp://guest:guest@rabbitmq:5672"
+      ConnectionStrings__orderingdb: "Host=catalogdb;Port=5432;Database=orderingdb;Username=postgres;Password=password"
+    ports:
+      - "5200:5200"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      catalogdb:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c", "./wait-for-it.sh rabbitmq:5672 -- ./wait-for-it.sh catalogdb:5432 -- dotnet OrderProcessor.dll"]
+    networks:
+      - eShopNetwork
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5200/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   eShopNetwork:
