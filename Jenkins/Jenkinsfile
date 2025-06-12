@@ -1,0 +1,37 @@
+pipeline {
+    angent any
+    stages {
+        stage ('build') {
+            step {
+                echo 'Build ...............'
+            }
+            
+        }
+        stage ('test: integration-&-quality') {
+            step {
+                echo 'test: integration-&-quality ...............'
+            }                      
+        }
+        stage ('test: functional') {
+            step {
+                echo 'test: functional ...............'
+            }            
+        }
+        stage ('test: load-&-security') {
+            step {
+                echo 'test: load-&-security ...............'
+            }            
+        }
+        stage ('approval') {
+            step {
+                echo 'approval ...............'
+            }
+            
+        }
+        stage ('deploy:dev') {
+            step {
+                echo 'deploy:dev ...............'
+            }            
+        }
+    }
+}

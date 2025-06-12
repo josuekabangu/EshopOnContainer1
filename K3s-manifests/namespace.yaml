@@ -1,0 +1,5 @@
+apiVersion: V1
+metadata:
+  name: dev
+  labals:
+    app: eshop
