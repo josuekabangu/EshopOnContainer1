@@ -1,37 +1,41 @@
 pipeline {
-    angent any
+    agent any
+
     stages {
-        stage ('build') {
-            step {
+        stage('build') {
+            steps {
                 echo 'Build ...............'
             }
-            
         }
-        stage ('test: integration-&-quality') {
-            step {
+
+        stage('test: integration-&-quality') {
+            steps {
                 echo 'test: integration-&-quality ...............'
-            }                      
+            }
         }
-        stage ('test: functional') {
-            step {
+
+        stage('test: functional') {
+            steps {
                 echo 'test: functional ...............'
-            }            
+            }
         }
-        stage ('test: load-&-security') {
-            step {
+
+        stage('test: load-&-security') {
+            steps {
                 echo 'test: load-&-security ...............'
-            }            
+            }
         }
-        stage ('approval') {
-            step {
+
+        stage('approval') {
+            steps {
                 echo 'approval ...............'
             }
-            
         }
-        stage ('deploy:dev') {
-            step {
+
+        stage('deploy:dev') {
+            steps {
                 echo 'deploy:dev ...............'
-            }            
+            }
         }
     }
 }
